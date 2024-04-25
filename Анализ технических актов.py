@@ -17,7 +17,8 @@ def check_month(m1s, m1e, m2s='-', m2e='-', m3s='-', m3e='-'):
 
     Необходимо менять ключи под нужный этап."""
     months = (m1s, m1e, m2s, m2e, m3s, m3e)
-    month_mapping = {'02': (0, 1), '03': (2, 3), '04': (4, 5)}
+    # month_mapping = {'02': (0, 1), '03': (2, 3), '04': (4, 5)}
+    month_mapping = {'11': (0, 1), '12': (2, 3), '01': (4, 5)}
     result = ['-' for _ in range(6)]
 
     for i in range(0, len(months), 2):
@@ -76,13 +77,14 @@ def file_processing(sheet, file, num):
                 if 'услуги:' in str(sheet[f'A{ir - 1}'].value):
                     address = sheet[f'A{ir - 1}'].value[23:]
 
-                if (not sheet.cell(ir + 1, 1).value
+                if (not sheet.cell(ir + 1, 2).value
                         and sheet.cell(ir + 1, column=4).value):
                     month_2_start = sheet[f'D{ir + 1}'].value
                     month_2_end = sheet[f'E{ir + 1}'].value
 
                 if (not sheet.cell(ir + 2, 1).value
-                        and sheet.cell(ir + 2, column=4).value):
+                        and sheet.cell(ir + 2, column=4).value
+                        and month_2_start != "-"):
                     month_3_start = sheet[f'D{ir + 2}'].value
                     month_3_end = sheet[f'E{ir + 2}'].value
 

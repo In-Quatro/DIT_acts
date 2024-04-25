@@ -56,8 +56,7 @@ def main():
     date_path = f'{folder_date}/{date}'
 
     if not os.path.exists(date_path):
-        logging.warning(f'Нет файла "{date}" для "{num}" очереди!')
-        exit()
+        exit(f'Нет файла "{date}" для "{num}" очереди!')
 
     if not os.path.exists(output_folder):
         os.mkdir(output_folder)
