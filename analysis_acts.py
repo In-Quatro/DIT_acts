@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+from constants import M1, M2, M3
+import subprocess
+
 import openpyxl
 import os
 from pathlib import Path
@@ -15,10 +18,9 @@ logging.basicConfig(level=logging.INFO,
 def check_month(m1s, m1e, m2s='-', m2e='-', m3s='-', m3e='-'):
     """Распределение дат по своим месяцам.
 
-    Необходимо менять ключи под нужный этап."""
+    Необходимо менять ключи под нужный этап в файле constants."""
     months = (m1s, m1e, m2s, m2e, m3s, m3e)
-    # month_mapping = {'02': (0, 1), '03': (2, 3), '04': (4, 5)}
-    month_mapping = {'11': (0, 1), '12': (2, 3), '01': (4, 5)}
+    month_mapping = {M1: (0, 1), M2: (2, 3), M3: (4, 5)}
     result = ['-' for _ in range(6)]
 
     for i in range(0, len(months), 2):
@@ -101,21 +103,28 @@ def file_processing(sheet, file, num):
 
 def main():
     """Главная функция."""
-    folder = 'xlsx_input'
-    files = os.listdir(folder)
+    print('Выбран режим сбора данных')
+    num = input('Укажите номер очереди (1, 4, 5 или 13): ')
+
+    if num not in ('1', '4', '5', '13'):
+        exit('Необходимо указать правильно очередь!')
+
+    folder_name = fr'Анализ_актов\input\{num}-я'
+    files = os.listdir(folder_name)
 
     if not files:
-        exit(f'Нет файлов в папке "{folder}" для обработки!')
-
-    num = input('Укажите номер очереди: ')
+        exit(f'Нет файлов в папке "{folder_name}" для обработки!')
 
     for file in files:
         file_name = Path(file).stem
         if Path(file).suffix == '.xlsx':
-            file_path = Path("xlsx_input", file)
+            file_path = Path(folder_name, file)
             wb = openpyxl.load_workbook(file_path)
             wb_sheet = wb['Лист1']
             file_processing(wb_sheet, file_name, num)
+    logging.info(f'Анализ завершен. Создан файл "Данные (СП{num}).csv"')
+    project_folder = os.getcwd()
+    subprocess.Popen(fr'explorer {project_folder}\Анализ_актов')
 
 
 if __name__ == "__main__":

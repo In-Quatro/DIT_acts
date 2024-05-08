@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
 import csv
+from constants import (SIGNATURE_EXECUTIVE, SIGNATURES_PARTIES, EXECUTIVE,
+                       EURECA, SIGNATURE_MEDICAL_ORGANIZATION,
+                       MEDICAL_ORGANIZATION, STAMP_PLACE)
 import shutil
+import subprocess
+from styles import (font, font_bold, border,
+                    alignment_1, alignment_2, alignment_3)
 import openpyxl
-from openpyxl.styles import Border, Side, Alignment, Font
 import os
 from pathlib import Path
 
@@ -12,45 +17,19 @@ logging.basicConfig(level=logging.INFO,
                     format='%(levelname)s - %(asctime)s  - %(message)s',
                     datefmt='%H:%M:%S')
 
-# Стили
-font = Font(name='Times New Roman', size=9)
-font_bold = Font(name='Times New Roman', size=9, bold=True)
 
-alignment = Alignment(horizontal='center',
-                      vertical='center',
-                      wrap_text=True
-                      )
-alignment_2 = Alignment(horizontal='left',
-                        vertical='center',
-                        wrap_text=True
-                        )
-alignment_3 = Alignment(horizontal='left',
-                        vertical='top',
-                        wrap_text=True
-                        )
-border = Border(left=Side(style='thin'),
-                right=Side(style='thin'),
-                top=Side(style='thin'),
-                bottom=Side(style='thin'))
-
-
-def check_months(m1s, m1e, m2s, m2e, m3s, m3e):
+def check_months(*args):
     """Обработка количества месяцев."""
-    # Создаем список месяцев
-    months_list = [m1s, m1e, m2s, m2e, m3s, m3e]
 
-    # Фильтруем пустые элементы
-    valid_months = [elem for elem in months_list if elem != '-']
-
-    # Вычисляем количество пустых элементов
-    delta = max(0, 6 - len(valid_months))
-
-    # Дополняем список пустыми значениями
-    result = valid_months + ['-' for _ in range(delta)]
-
-    # Добавляем количество заполненных элементов в результат
-    result.append(int(len(valid_months) / 2))
-
+    result = ['-'] * 6
+    idx = 0
+    for month in args:
+        if month != '-':
+            result[idx] = month
+            idx += 1
+    # Добавление количества месяцев
+    idx_month = str(idx // 2)
+    result.append(idx_month)
     return result
 
 
@@ -68,18 +47,18 @@ def fill_month_data(sheet, idx_row, i, month_start, month_end):
 
 def fill_signature(sheet, idx_row, signature):
     """Создание подписи в документе."""
-    sheet[f'A{idx_row + 1}'] = 'Подписи сторон:'
+    sheet[f'A{idx_row + 1}'] = SIGNATURES_PARTIES
     sheet[f'A{idx_row + 1}'].font = font
-    sheet[f'A{idx_row + 1}'].alignment = alignment
+    sheet[f'A{idx_row + 1}'].alignment = alignment_1
     sheet.merge_cells(f'A{idx_row + 1}:M{idx_row + 1}')
 
-    sheet[f'B{idx_row + 3}'] = 'ИСПОЛНИТЕЛЬ:'
+    sheet[f'B{idx_row + 3}'] = EXECUTIVE
     sheet[f'B{idx_row + 3}'].font = font_bold
 
-    sheet[f'J{idx_row + 3}'] = 'МО:'
+    sheet[f'J{idx_row + 3}'] = MEDICAL_ORGANIZATION
     sheet[f'J{idx_row + 3}'].font = font_bold
 
-    sheet[f'B{idx_row + 5}'] = 'ООО «Эврика»\nМенеджер'
+    sheet[f'B{idx_row + 5}'] = EURECA
     sheet[f'B{idx_row + 5}'].font = font_bold
     sheet[f'B{idx_row + 5}'].alignment = alignment_2
     sheet.merge_cells(f'B{idx_row + 5}:D{idx_row + 5}')
@@ -90,13 +69,13 @@ def fill_signature(sheet, idx_row, signature):
     sheet[f'J{idx_row + 5}'].alignment = alignment_3
     sheet.merge_cells(f'J{idx_row + 5}:L{idx_row + 5}')
 
-    sheet[f'B{idx_row + 8}'] = '________________/А.А. Шубенков/'
+    sheet[f'B{idx_row + 8}'] = SIGNATURE_EXECUTIVE
     sheet[f'B{idx_row + 8}'].font = font
 
-    sheet[f'J{idx_row + 8}'] = '_________________ /___________________'
+    sheet[f'J{idx_row + 8}'] = SIGNATURE_MEDICAL_ORGANIZATION
 
     for i in ('B', 'J'):
-        sheet[f'{i}{idx_row + 9}'] = 'М.П.'
+        sheet[f'{i}{idx_row + 9}'] = STAMP_PLACE
         sheet[f'{i}{idx_row + 9}'].font = font
 
 
@@ -106,7 +85,7 @@ def table_style(sheet):
         for cell in row:
             cell.border = border
             cell.font = font
-            cell.alignment = alignment
+            cell.alignment = alignment_1
 
             if isinstance(cell.value, str):
                 if 'государственное' in cell.value.lower():
@@ -122,30 +101,32 @@ def table_style(sheet):
 def file_processing(sheet, data):
     """Создание Актов из CSV файлов."""
     number = 0
-    cnt_row = None
+    signature = None
     idx_row = 3
     current_address = None
     current_mo = None
     for row in data:
         point = row['ТТ']
         type_point = row['Тип']
-        month_1_start = row['н1']
-        month_1_end = row['к1']
-        month_2_start = row['н2']
-        month_2_end = row['к2']
-        month_3_start = row['н3']
-        month_3_end = row['к3']
+        m_1_start = row['н1']
+        m_1_end = row['к1']
+        m_2_start = row['н2']
+        m_2_end = row['к2']
+        m_3_start = row['н3']
+        m_3_end = row['к3']
         signature = row['Подпись']
         mo = row['Наименование МО']
         pref = 'Место оказания услуги: '
         address = row['Адрес']
 
-        months = [month_1_start, month_1_end, month_2_start,
-                  month_2_end, month_3_start, month_3_end]
+        months = [m_1_start, m_1_end, m_2_start, m_2_end, m_3_start, m_3_end]
 
-        month_1_start, month_1_end, \
-        month_2_start, month_2_end, \
-        month_3_start, month_3_end, cnt_row = check_months(*months)
+        (m_1_start, m_1_end,
+         m_2_start, m_2_end,
+         m_3_start, m_3_end,
+         cnt_row) = check_months(*months)
+
+        cnt_row = int(cnt_row)
 
         if current_address != address or current_mo != mo:
             sheet[f'A{idx_row}'] = mo
@@ -167,9 +148,9 @@ def file_processing(sheet, data):
         sheet[f'B{idx_row}'] = point
         sheet[f'C{idx_row}'] = type_point
 
-        fill_month_data(sheet, idx_row, 0, month_1_start, month_1_end)
-        fill_month_data(sheet, idx_row, 1, month_2_start, month_2_end)
-        fill_month_data(sheet, idx_row, 2, month_3_start, month_3_end)
+        fill_month_data(sheet, idx_row, 0, m_1_start, m_1_end)
+        fill_month_data(sheet, idx_row, 1, m_2_start, m_2_end)
+        fill_month_data(sheet, idx_row, 2, m_3_start, m_3_end)
 
         # Объединение ячеек в таблице
         for i in ('A', 'B', 'C'):
@@ -178,10 +159,7 @@ def file_processing(sheet, data):
         idx_row += cnt_row
         number += 1
 
-    # Делаем оформление для таблицы
     table_style(sheet)
-
-    # Создание подписи в конце документа
     fill_signature(sheet, idx_row, signature)
 
 
@@ -190,19 +168,27 @@ def create_csv(template):
     Разбивка данных на CSV файлы.
 
         Колонки:
-        - Технологическая точка;
+        - ТТ (Технологическая точка);
         - Тип;
-        - Код МО;
         - Наименование МО;
-        - Начало 1-го месяца;
-        - Конец 1-го месяца;
-        - Начало 2-го месяца;
-        - Конец 2-го месяца;
-        - Начало 3-го месяца;
-        - Конец 3-го месяца;
-        - Подпись для МО;
+        - Адрес;
+        - н1 (Начало 1-го месяца);
+        - к1 (Конец 1-го месяца);
+        - н2 (Начало 2-го месяца);
+        - к2 (Конец 2-го месяца);
+        - н3 (Начало 3-го месяца);
+        - к3 (Конец 3-го месяца);
+        - Подпись;
         - Общее МО.
     """
+    # Удаляем папку "csv" если она есть
+    if os.path.exists('csv'):
+        shutil.rmtree('csv')
+
+    # Создаем папку "csv" если ее нет
+    if not os.path.exists('csv'):
+        os.mkdir('csv')
+
     with open(template, newline='') as csvfile:
         reader = csv.DictReader(csvfile, delimiter=';')
 
@@ -217,7 +203,7 @@ def create_csv(template):
                 if current_file:
                     current_file.close()
 
-                filename = 'csv/' + name_file + '.csv'
+                filename = fr'csv\{name_file}.csv'
 
                 current_file = open(
                     filename, 'a',
@@ -235,79 +221,85 @@ def create_csv(template):
 
 
 def get_new_file_name(file_name, folder):
-    """Переименовывает новый файл если уже есть такой фал в папке."""
+    """Переименовывает новый файл если уже есть такой файл в папке."""
     base, ext = os.path.splitext(file_name)
     index = 1
     new_file_name = file_name
 
     while os.path.exists(os.path.join(folder, new_file_name)):
-        new_file_name = f"{base} ({index}){ext}"
+        new_file_name = f'{base} ({index}){ext}'
         index += 1
     return new_file_name
 
 
+def check_queue_num():
+    """Проверка корректности очереди."""
+    while True:
+        queue_num = input('Укажите номер очереди (1, 4, 5 или 13) '
+                          'или 0 для выхода: ')
+        if queue_num in ('1', '4', '5', '13'):
+            return queue_num
+        if queue_num == '0':
+            exit('Завершение работы')
+        else:
+            print('Необходимо указать правильно очередь!')
+
+
 def main():
-    num = input('Укажите номер очереди: ')
+    """Главная функция для создания технических актов.
+
+    Имена файлов с данными должны иметь вид excel_data_{номер очереди}.csv
+    """
+
+    print('Выбран режим создания Технических актов')
+    queue_num = check_queue_num()
     template = 'Шаблон_для_акта.xlsx'
-    folder_name = f'Акты_{num}-я_очередь'
-    template_date = f'Данные_для_актов/excel_data_{num}.csv'
+    folder_name = f'Акты_{queue_num}-я_очередь'
+    template_date = fr'Данные_для_актов\excel_data_{queue_num}.csv'
 
     if not os.path.exists(template_date):
-        logging.warning(f'Нет файла "{template_date}" для "{num}" очереди!')
-        exit()
+        exit(f'Нет файла "{template_date}" для "{queue_num}" очереди!')
 
     if not os.path.exists(folder_name):
         os.mkdir(folder_name)
         logging.info(f'Создаю папку "{folder_name}"')
 
-    # Удаляем папку "csv" если она есть
-    if os.path.exists('csv'):
-        shutil.rmtree('csv')
-
-    # Создаем папку "csv" если ее нет
-    if not os.path.exists('csv'):
-        os.mkdir('csv')
-
-    # Разделяем данные на отдельные файлы csv
     create_csv(template_date)
-
-    # Счетчик файлов
     quantity = 0
-
     csv_folder = 'csv'
     csv_files = os.listdir(csv_folder)
 
     for file in csv_files:
         with open(os.path.join(csv_folder, file),
                   newline='', encoding='utf-8') as csvfile:
-            data_data = csv.DictReader(csvfile, delimiter=",")
+            data = csv.DictReader(csvfile, delimiter=",")
 
             name_file = Path(file).stem
             logging.info(f'Создаю файл "{name_file}"')
 
-            # Открываем шаблон
-            folder = 'Шаблоны'
-            wb = openpyxl.load_workbook(f'{folder}/{template}')
+            template_dir = 'Шаблоны'
+            wb = openpyxl.load_workbook(fr'{template_dir}\{template}')
 
-            # Подгружаем лист в переменную
             sheet = wb['Лист1']
 
-            # Создаем акт
-            file_processing(sheet, data_data)
+            file_processing(sheet, data)
 
             # Присвоение имени для документа
-            file = get_new_file_name(name_file + '.xlsx', folder_name)
+            file = get_new_file_name(f'{name_file}.xlsx', folder_name)
 
             with Path(folder_name, file) as output_file:
                 wb.save(output_file)
                 quantity += 1
                 logging.info(f'{name_file} - [ok]')
 
-    # Удаляем папку "csv"
+    # Удаление папки "csv"
     shutil.rmtree('csv')
 
     logging.info(f'Создано файлов: {quantity}')
     logging.info('Операция завершена успешно')
+
+    project_folder = os.getcwd()
+    subprocess.Popen(fr'explorer {project_folder}\{folder_name}')
 
 
 if __name__ == "__main__":

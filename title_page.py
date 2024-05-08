@@ -47,7 +47,12 @@ def fill_docx_template(template_path, output_path, data):
 
 def main():
     """Главная функция."""
-    num = input('Укажите номер очереди: ')
+    print('Выбран режим создание Титульных листов для технических актов')
+    num = input('Укажите номер очереди (1, 4, 5 или 13): ')
+
+    if num not in ('1', '4', '5', '13'):
+        exit('Необходимо указать правильно очередь!')
+
     folder_template = 'Шаблоны'
     template_path = f'{folder_template}/Шаблон_для_титульного_листа.docx'
     output_folder = f'Титульные_листы_{num}-я_очередь'
