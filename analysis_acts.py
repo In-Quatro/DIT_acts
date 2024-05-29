@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from constants import M1, M2, M3
 import subprocess
 
@@ -16,9 +15,11 @@ logging.basicConfig(level=logging.INFO,
 
 
 def check_month(m1s, m1e, m2s='-', m2e='-', m3s='-', m3e='-'):
-    """Распределение дат по своим месяцам.
+    """
+    Распределение дат по своим месяцам.
 
-    Необходимо менять ключи под нужный этап в файле constants."""
+    Необходимо менять ключи под нужный этап в файле constants.
+    """
     months = (m1s, m1e, m2s, m2e, m3s, m3e)
     month_mapping = {M1: (0, 1), M2: (2, 3), M3: (4, 5)}
     result = ['-' for _ in range(6)]

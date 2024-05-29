@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import csv
 from constants import (SIGNATURE_EXECUTIVE, SIGNATURES_PARTIES, EXECUTIVE,
                        EURECA, SIGNATURE_MEDICAL_ORGANIZATION,
@@ -27,8 +26,8 @@ def check_months(*args):
         if month != '-':
             result[idx] = month
             idx += 1
-    # Добавление количества месяцев
-    idx_month = str(idx // 2)
+
+    idx_month = str(idx // 2)    # Добавление количества месяцев
     result.append(idx_month)
     return result
 
@@ -94,8 +93,7 @@ def table_style(sheet):
                 elif 'место' in cell.value.lower():
                     cell.alignment = alignment_2
 
-    # Сквозные строки для таблицы
-    sheet.print_title_rows = '1:2'
+    sheet.print_title_rows = '1:2'  # Сквозные строки для таблицы
 
 
 def file_processing(sheet, data):
@@ -152,8 +150,7 @@ def file_processing(sheet, data):
         fill_month_data(sheet, idx_row, 1, m_2_start, m_2_end)
         fill_month_data(sheet, idx_row, 2, m_3_start, m_3_end)
 
-        # Объединение ячеек в таблице
-        for i in ('A', 'B', 'C'):
+        for i in ('A', 'B', 'C'):   # Объединение ячеек в таблице
             sheet.merge_cells(f'{i}{idx_row}:{i}{idx_row + cnt_row - 1}')
 
         idx_row += cnt_row
@@ -164,29 +161,11 @@ def file_processing(sheet, data):
 
 
 def create_csv(template):
-    """
-    Разбивка данных на CSV файлы.
-
-        Колонки:
-        - ТТ (Технологическая точка);
-        - Тип;
-        - Наименование МО;
-        - Адрес;
-        - н1 (Начало 1-го месяца);
-        - к1 (Конец 1-го месяца);
-        - н2 (Начало 2-го месяца);
-        - к2 (Конец 2-го месяца);
-        - н3 (Начало 3-го месяца);
-        - к3 (Конец 3-го месяца);
-        - Подпись;
-        - Общее МО.
-    """
-    # Удаляем папку "csv" если она есть
-    if os.path.exists('csv'):
+    """Разбивка данных на CSV файлы."""
+    if os.path.exists('csv'):   # Удаляем папку "csv" если она есть
         shutil.rmtree('csv')
 
-    # Создаем папку "csv" если ее нет
-    if not os.path.exists('csv'):
+    if not os.path.exists('csv'):   # Создаем папку "csv" если ее нет
         os.mkdir('csv')
 
     with open(template, newline='') as csvfile:
@@ -284,7 +263,6 @@ def main():
 
             file_processing(sheet, data)
 
-            # Присвоение имени для документа
             file = get_new_file_name(f'{name_file}.xlsx', folder_name)
 
             with Path(folder_name, file) as output_file:
@@ -292,8 +270,7 @@ def main():
                 quantity += 1
                 logging.info(f'{name_file} - [ok]')
 
-    # Удаление папки "csv"
-    shutil.rmtree('csv')
+    shutil.rmtree('csv')    # Удаление папки "csv"
 
     logging.info(f'Создано файлов: {quantity}')
     logging.info('Операция завершена успешно')

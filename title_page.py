@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import os
 import re
 import csv
@@ -11,26 +10,9 @@ logging.basicConfig(level=logging.INFO,
                     format='%(levelname)s - %(asctime)s  - %(message)s',
                     datefmt='%H:%M:%S')
 
-"""
-Поля для шаблона:
-
-  - num (номер очереди);
-  - contract (номер и дата контракта);
-  - kod (код МО);
-  - period (даты этапа);
-  - date (дата документа);
-  - post (должность исполнителя);
-  - executor (ФИО исполнителя);
-  - attorney (доверенность исполнителя);
-  - title (наименование МО);
-  - short (сокращенное наименование МО);
-  - position (должность МО);
-  - client (ФИО МО);
-  - regulation (основание подписания МО (устав/доверенность))
-"""
-
 
 def fill_docx_template(template_path, output_path, data):
+    """Создание docx на основе шаблона."""
     doc = Document(template_path)
 
     for paragraph in doc.paragraphs:

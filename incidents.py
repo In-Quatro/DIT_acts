@@ -30,21 +30,14 @@ def create_acts_with_incident(acts, folder_input, folder_output):
     """Функция для создания актов с заявками."""
     quantity = 0
 
-    # Перебираем все файлы актов
     for act in acts:
         logging.info(f'Открываю {Path(act).stem}')
-        # quantity += 1
         if Path(act).suffix == '.xlsx':
             file_path = Path(folder_input, act)
             wb = openpyxl.load_workbook(file_path)
-
-            # Подгружаем лист
             sheet = wb['Лист1']
-
             find_point(sheet)
-
-            # Скозные строки
-            sheet.print_title_rows = '1:2'
+            sheet.print_title_rows = '1:2'  # Скозные строки
 
             # Сохранение файла в папку
             with Path(folder_output, act) as output_file:
@@ -72,8 +65,8 @@ def fill_incident(sheet, idx, start, end, point):
     if incidents:
         for i, row in enumerate(incidents):
             if (
-                (start <= str_to_date(row['Время назначения']) <= end)
-                and row['ТТ'] == point
+                (row['ТТ'] == point and
+                 start <= str_to_date(row['Время назначения']) <= end)
             ):
                 sheet[f'G{idx}'] = row['Номер заявки']
                 sheet[f'H{idx}'] = row['Время в отложено']
@@ -135,18 +128,10 @@ def main():
     if not os.path.exists(data):
         exit(f'Нет файла "{data}" для "{num}" очереди!')
 
-    # Создаем список с заявками
     create_list_incident(data)
-
-    # Вносим заявки в акты
     create_acts_with_incident(acts, folder_input, folder_output)
-
     logging.info('Открываю каталог с результатом')
-
-    # Получаем текущий рабочий каталог
     project_folder = os.getcwd()
-
-    # Открывает каталог
     subprocess.Popen(fr'explorer {project_folder}\{folder_output}')
 
 
