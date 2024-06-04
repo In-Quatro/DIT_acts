@@ -52,7 +52,7 @@ def main():
     """Главная функция."""
     print('Выбран режим сбора данных из титульных листов')
     queue_num = check_queue_num()
-    folder_name = fr'Данные из титульных листов\{queue_num}-я'
+    folder_name = fr'Данные_из_титульных_листов\{queue_num}-я'
     files = os.listdir(folder_name)
     count_files = len(files)
     if not files:
@@ -77,7 +77,7 @@ def main():
 
     logging.info('Все данные считаны')
     project_folder = os.getcwd()
-    subprocess.Popen(fr'explorer {project_folder}\Данные из титульных листов')
+    subprocess.Popen(fr'explorer {project_folder}\Данные_из_титульных_листов')
 
 
 if __name__ == "__main__":

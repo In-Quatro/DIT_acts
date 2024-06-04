@@ -58,10 +58,6 @@ def file_processing(sheet, file, num):
     csv_folder = 'Анализ_актов'
     csv_path = f'{csv_folder}/{csv_file}'
 
-    if not os.path.exists(csv_folder):
-        os.mkdir(csv_folder)
-        logging.info(f'Создаю папку "{csv_folder}"')
-
     logging.info(f'Обработка "{file}"')
     for ir in range(1, sheet.max_row + 1):
         for ic in range(1, 3):
